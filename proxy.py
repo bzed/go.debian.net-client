@@ -21,7 +21,12 @@
 """
 
 import urllib
-from anyjson import serialize, deserialize
+
+try:
+    from anyjson import serialize, deserialize
+except ImportError:
+    #there is no anyjson/cjson on alioth yet.
+    from json import write as serialize, read as deserialize
 
 class JSONRPCException(Exception):
     def __init__(self, rpcError):
