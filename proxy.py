@@ -27,7 +27,10 @@ class JSONRPCException(Exception):
     def __init__(self, rpcError):
         Exception.__init__(self)
         self.error = rpcError
-        
+
+    def __str__(self):
+        return str(self.error)
+
 class ServiceProxy(object):
     def __init__(self, serviceURL, serviceName=None):
         self.__serviceURL = serviceURL

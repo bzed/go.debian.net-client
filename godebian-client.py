@@ -32,7 +32,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os
 import sys
 
-from proxy import ServiceProxy
+from proxy import ServiceProxy, JSONRPCException
+
 sp = ServiceProxy("http://deb.li/rpc/json")
 
 command = os.path.basename(sys.argv[0])
@@ -40,4 +41,8 @@ if command == 'godebian-client.py':
     command = 'add_url'
 args = sys.argv[1:]
 
-print eval ("sp.%s(*args)" %(command,))
+try:
+    result = eval ("sp.%s(*args)" %(command,))
+except JSONRPCException, e:
+    result = str(e)
+print result
