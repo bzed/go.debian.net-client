@@ -12,7 +12,8 @@ Adding an URL:
     bjlx
 
 Now http://deb.li/bjlx and http://go.debian.net/bjlx will redirect
-to http://bzed.de
+to http://bzed.de and http://deb.li/p/bjlx / http://go.debian.net/p/bjlx
+will show a preview page of the redirect.
 
 
 
@@ -24,7 +25,9 @@ This function allows to select the key to use:
     debian
 
 Now http://deb.li/debian and http://go.debian.net/debian will redirect
-to http://www.debian.org
+to http://www.debian.org and http://deb.li/p/debian / http://go.debian.net/p/debian
+will show a preview page of the redirect.
+
 
 In case the selected key is already used, an exception is raised:
 
