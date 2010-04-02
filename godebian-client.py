@@ -36,7 +36,7 @@ from proxy import ServiceProxy
 sp = ServiceProxy("http://deb.li/rpc/json")
 
 command = os.path.basename(sys.argv[0])
-if command = 'godebian-client.py':
+if command == 'godebian-client.py':
     command = 'add_url'
 args = sys.argv[1:]
 
