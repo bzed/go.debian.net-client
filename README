@@ -1,6 +1,11 @@
 Example json-rpc client for deb.li/go.debian.net
 ------------------------------------------------
 
+Requirements:
+-------------
+python-anyjson and one supported json implementation, like python-cjson.
+
+
 Adding an URL:
 --------------
     % ./add_url http://bzed.de
