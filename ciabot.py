@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # Copyright (c) 2010 Eric S. Raymond <esr@thyrsus.com>
+# Copyright (c) 2010 Bernd Zeimetz <bzed@debian.org>
 # Distributed under BSD terms.
 #
 # Thiu is version 1.1 of ciabot.py
@@ -26,15 +27,19 @@
 # than shipped to CIA. This may be useful for debugging purposes.
 #
 
-#
-# The project as known to CIA. You will want to change this:
-#
-project="GPSD"
+# Make sure you set the CIA project name using git config:
+#    % git config hooks.ciabot.project your-project-name
 
 #
 # You may not need to change these:
 #
 import os, sys, commands, socket, urllib
+do = lambda command: commands.getstatusoutput(command)[1]
+
+#
+# The project as known to CIA:
+#
+project=do("git config hooks.ciabot.project")
 
 # Name of the repository.
 # You can hardwire this to make the script faster.
@@ -102,9 +107,6 @@ toaddr = "cia@cia.vc"
 # Should only change when the script itself gets a new home and maintainer.
 generator="http://www.catb.org/~esr/ciabot.py"
 
-def do(command):
-    return commands.getstatusoutput(command)[1]
-
 def report(refname, merged):
     "Generare a commit notification to be reported to CIA"
 
@@ -160,9 +162,6 @@ Subject: DeliverXML
 if __name__ == "__main__":
     # We''ll need the git version number.
     gitver = do("git --version").split()[0]
-
-    # Add the git private command directory to the command path.
-    os.environ["PATH"] += ":" + do("git --exec-path")
 
     urlprefix = urlprefix % globals()
 
