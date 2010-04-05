@@ -28,7 +28,7 @@
 #
 
 # Make sure you set the CIA project name using git config:
-#    % git config hooks.ciabot.project your-project-name
+#    % git config hooks.cia-project your-project-name
 
 #
 # You may not need to change these:
@@ -39,7 +39,7 @@ do = lambda command: commands.getstatusoutput(command)[1]
 #
 # The project as known to CIA:
 #
-project=do("git config hooks.ciabot.project")
+project=do("git config hooks.cia-project")
 
 # Name of the repository.
 # You can hardwire this to make the script faster.
