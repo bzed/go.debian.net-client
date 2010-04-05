@@ -33,7 +33,7 @@
 #
 # You may not need to change these:
 #
-import os, sys, commands, socket, urllib
+import os, sys, commands, socket, urllib, getpass
 do = lambda command: commands.getstatusoutput(command)[1]
 
 #
@@ -43,23 +43,19 @@ project=do("git config hooks.ciabot.project")
 
 # Name of the repository.
 # You can hardwire this to make the script faster.
-repo = os.path.basename(os.getcwd())
+repopath = os.getcwd()
+repo = repopath.replace('/git/','',1)
 
 # Fully-qualified domain name of this host.
 # You can hardwire this to make the script faster.
-host = socket.getfqdn()
+host = "git.debian.org"
 
 # Changeset URL prefix for your repo: when the commit ID is appended
 # to this, it should point at a CGI that will display the commit
 # through gitweb or something similar. The defaults will probably
 # work if you have a typical gitweb/cgit setup.
 #
-#urlprefix="http://%(host)s/cgi-bin/gitweb.cgi?p=%(repo)s;a=commit;h="
-urlprefix="http://%(host)s/cgi-bin/cgit.cgi/%(repo)s/commit/?id="
-
-# The service used to turn your gitwebbish URL into a tinyurl so it
-# will take up less space on the IRC notification line.
-tinyifier = "http://tinyurl.com/api-create.php?url="
+urlprefix = "http://%(host)s/?p=%(repo)s;a=commit;h=" 
 
 # The template used to generate the XML messages to CIA.  You can make
 # visible changes to the IRC-bot notification lines by hacking this.
@@ -77,7 +73,7 @@ xml = '''\
   </generator>
   <source>
     <project>%(project)s</project>
-    <branch>%(repo)s:%(branch)s</branch>
+    <branch>%(branch)s</branch>
   </source>
   <timestamp>%(ts)s</timestamp>
   <body>
@@ -100,19 +96,31 @@ xml = '''\
 
 # Addresses for the e-mail. The from address is a dummy, since CIA
 # will never reply to this mail.
-fromaddr = "CIABOT-NOREPLY@" + host
+fromaddr = "%s@%s" %(getpass.getuser(), host)
 toaddr = "cia@cia.vc"
 
 # Identify the generator script.
 # Should only change when the script itself gets a new home and maintainer.
 generator="http://www.catb.org/~esr/ciabot.py"
 
+try:
+    from anyjson import serialize, deserialize
+except ImportError:
+    #there is no anyjson/cjson on alioth yet.
+    from json import write as serialize, read as deserialize
+
 def report(refname, merged):
     "Generare a commit notification to be reported to CIA"
 
     # Try to tinyfy a reference to a web view for this commit.
     try:
-        url = open(urllib.urlretrieve(tinyifier + urlprefix + merged)[0]).read()
+        postdata = serialize({"method": "add_url", 'params': ["%s%s" %(urlprefix, merged) ], 'id':'ciabot.py'})
+        respdata = urllib.urlopen("http://deb.li/rpc/json", postdata).read()
+        print respdata
+        resp = deserialize(respdata)
+        if resp['error'] != None:
+            raise Exception(resp['error'])
+        url = "http://deb.li/%s" %(resp['result'], )
     except:
         url = urlprefix + merged
 
@@ -138,7 +146,8 @@ def report(refname, merged):
             logmsg = line
             break
     (author, ts) = headers["author"].split(">")
-    author = author.replace("<", "").split("@")[0].split()[-1]
+    author = author.split("<")[-1]
+    author = author.replace('@debian.org','')
 
     # This ignores the timezone.  Not clear what to do with it...
     ts = ts.strip().split()[0]
