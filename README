@@ -3,7 +3,8 @@ Example json-rpc client for deb.li/go.debian.net
 
 Requirements:
 -------------
-python-anyjson and one supported json implementation, like python-cjson.
+Either python-anyjson and one supported json implementation, like python-cjson
+or python-json.
 
 
 Adding an URL:
