@@ -3,7 +3,7 @@
 # Copyright (c) 2010 Bernd Zeimetz <bzed@debian.org>
 # Distributed under BSD terms.
 #
-# Thiu is version 1.1 of ciabot.py
+# This is version 1.1-bz1 of ciabot.py
 #
 # This script contains porcelain and porcelain byproducts.
 # It's Python because the Python standard libraries avoid portability/security
@@ -101,7 +101,7 @@ toaddr = "cia@cia.vc"
 
 # Identify the generator script.
 # Should only change when the script itself gets a new home and maintainer.
-generator="http://www.catb.org/~esr/ciabot.py"
+generator="http://deb.li/ciabot"
 
 try:
     from anyjson import serialize, deserialize
