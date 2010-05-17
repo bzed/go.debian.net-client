@@ -44,7 +44,7 @@ project=do("git config hooks.cia-project")
 # Name of the repository.
 # You can hardwire this to make the script faster.
 repopath = os.getcwd()
-repo = repopath.replace('/git/','',1)
+repo = repopath.replace('/srv/git.debian.org/git/','',1)
 
 # Fully-qualified domain name of this host.
 # You can hardwire this to make the script faster.
