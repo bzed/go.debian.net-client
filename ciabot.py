@@ -116,7 +116,6 @@ def report(refname, merged):
     try:
         postdata = serialize({"method": "add_url", 'params': ["%s%s" %(urlprefix, merged) ], 'id':'ciabot.py'})
         respdata = urllib.urlopen("http://deb.li/rpc/json", postdata).read()
-        print respdata
         resp = deserialize(respdata)
         if resp['error'] != None:
             raise Exception(resp['error'])
