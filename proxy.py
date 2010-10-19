@@ -26,7 +26,10 @@ try:
     from anyjson import serialize, deserialize
 except ImportError:
     #there is no anyjson/cjson on alioth yet.
-    from json import write as serialize, read as deserialize
+    try:
+        from json import dumps as serialize, loads as deserialize
+    except:
+        from simplejson import loads as serialize, dumps as deserialize
 
 class JSONRPCException(Exception):
     def __init__(self, rpcError):
