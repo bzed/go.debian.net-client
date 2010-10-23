@@ -3,59 +3,59 @@
 # Copyright (c) 2010 Bernd Zeimetz <bzed@debian.org>
 # Distributed under BSD terms.
 #
-# This is version 1.1-bz1 of ciabot.py
-#
 # This script contains porcelain and porcelain byproducts.
 # It's Python because the Python standard libraries avoid portability/security
 # issues raised by callouts in the ancestral Perl and sh scripts.  It should
 # be compatible back to Python 2.1.5
 #
-# It is meant to be run either in a post-commit hook or in an update
-# hook.
+# usage: ciabot.py [-V] [-n] [-p projectname]  [refname [commits...]]
 #
-# In post-commit, run it without arguments. It will query for current HEAD and
-# the latest commit ID to get the information it needs.
+# This script is meant to be run either in a post-commit hook or in an
+# update hook.  If there's nothing unusual about your hosting setup,
+# you can specify the project name and repo with config variables and
+# avoid having to modify this script.  Try it with -n to see the
+# notification mail dumped to stdout and verify that it looks
+# sane. With -V it dumps its version and exits.
 #
-# In update, call it with a refname followed by a list of commits.
+# In post-commit, run it without arguments. It will query for
+# current HEAD and the latest commit ID to get the information it
+# needs.
 #
-#       ciabot.py ${refname} $(git rev-list ${oldhead}..${newhead} | tac)
+# In update, call it with a refname followed by a list of commits:
+# You want to reverse the order git rev-list emits becxause it lists
+# from most recent to oldest.
 #
-# Note: this script uses mail, not XML-RPC, in order to avoid stalling
-# until timeout when the CIA XML-RPC server is down. 
+# /path/to/ciabot.py ${refname} $(git rev-list ${oldhead}..${newhead} | tac)
 #
-# Call with -n to see the notification mail dumped to stdout rather
-# than shipped to CIA. This may be useful for debugging purposes.
+# Configuration variables affecting this script:
+# ciabot.project = name of the project (required)
+# ciabot.repo = name of the project repo for gitweb/cgit purposes
+# ciabot.xmlrpc  = if true, ship notifications via XML-RPC 
+# ciabot.revformat = format in which the revision is shown
+#
+# The ciabot.repo defaults to ciabot.project lowercased. 
+#
+# The revformat variable may have the following values
+# raw -> full hex ID of commit
+# short -> first 12 chars of hex ID
+# describe = -> desescription relative to last tag, falling back to short
+# The default is 'describe'.
+#
+# Note: the shell ancestors of this script used mail, not XML-RPC, in
+# order to avoid stalling until timeout when the CIA XML-RPC server is
+# down. It is unknown whether this is still an issue in 2010, but we
+# default to mail just in case. (Using XML-RPC guarantees that multiple
+# notifications shipped from a commit hook will arrive in order.)
 #
 
-# Make sure you set the CIA project name using git config:
-#    % git config hooks.cia-project your-project-name
-
-#
-# You may not need to change these:
-#
-import os, sys, commands, socket, urllib, getpass
-do = lambda command: commands.getstatusoutput(command)[1]
-
-#
-# The project as known to CIA:
-#
-project=do("git config hooks.cia-project")
-
-# Name of the repository.
-# You can hardwire this to make the script faster.
-repopath = os.getcwd()
-repo = repopath.replace('/srv/git.debian.org/git/','',1)
-
-# Fully-qualified domain name of this host.
-# You can hardwire this to make the script faster.
-host = "git.debian.org"
+import os, sys, commands, socket, urllib
 
 # Changeset URL prefix for your repo: when the commit ID is appended
 # to this, it should point at a CGI that will display the commit
 # through gitweb or something similar. The defaults will probably
 # work if you have a typical gitweb/cgit setup.
 #
-urlprefix = "http://%(host)s/?p=%(repo)s;a=commit;h=" 
+urlprefix = "http://%(host)s/?p=%(repo)s;a=commit;h="
 
 # The template used to generate the XML messages to CIA.  You can make
 # visible changes to the IRC-bot notification lines by hacking this.
@@ -68,12 +68,12 @@ xml = '''\
 <message>
   <generator>
     <name>CIA Python client for Git</name>
-    <version>%(gitver)s</version>
+    <version>%(version)s</version>
     <url>%(generator)s</url>
   </generator>
   <source>
     <project>%(project)s</project>
-    <branch>%(branch)s</branch>
+    <branch>%(repo)s:%(branch)s</branch>
   </source>
   <timestamp>%(ts)s</timestamp>
   <body>
@@ -94,14 +94,13 @@ xml = '''\
 # No user-serviceable parts below this line:
 #
 
-# Addresses for the e-mail. The from address is a dummy, since CIA
-# will never reply to this mail.
-fromaddr = "%s@%s" %(getpass.getuser(), host)
-toaddr = "cia@cia.vc"
+# Where to ship e-mail notifications.
+toaddr = "cia@cia.navi.cx"
 
 # Identify the generator script.
 # Should only change when the script itself gets a new home and maintainer.
-generator="http://deb.li/ciabot"
+generator = "http://deb.li/ciabot"
+version = "3.3-bz1"
 
 try:
     from anyjson import serialize, deserialize
@@ -109,44 +108,47 @@ except ImportError:
     #there is no anyjson/cjson on alioth yet.
     from json import write as serialize, read as deserialize
 
+
+def do(command):
+    return commands.getstatusoutput(command)[1]
+
 def report(refname, merged):
-    "Generare a commit notification to be reported to CIA"
+    "Generate a commit notification to be reported to CIA"
 
     # Try to tinyfy a reference to a web view for this commit.
     try:
-        postdata = serialize({"method": "add_url", 'params': ["%s%s" %(urlprefix, merged) ], 'id':'ciabot.py'})
+        postdata = serialize({"method": "add_url", 'params': ["%s%s" %(urlprefix, merged) ], 'id':'ciab
         respdata = urllib.urlopen("http://deb.li/rpc/json", postdata).read()
         resp = deserialize(respdata)
         if resp['error'] != None:
             raise Exception(resp['error'])
         url = "http://deb.li/%s" %(resp['result'], )
+
     except:
         url = urlprefix + merged
 
     branch = os.path.basename(refname)
 
-    # Compute a shortnane for the revision
-    rev = do("git describe ${merged} 2>/dev/null") or merged[:12]
+    # Compute a description for the revision
+    if revformat == 'raw':
+        rev = merged
+    elif revformat == 'short':
+        rev = ''
+    else: # rev == 'describe'
+        rev = do("git describe %s 2>/dev/null" % merged)
+    if not rev:
+        rev = merged[:12]
 
     # Extract the neta-information for the commit
-    rawcommit = do("git cat-file commit " + merged)
     files=do("git diff-tree -r --name-only '"+ merged +"' | sed -e '1d' -e 's-.*-<file>&</file>-'")
-    inheader = True
-    headers = {}
-    logmsg = ""
-    for line in rawcommit.split("\n"):
-        if inheader:
-            if line:
-                fields = line.split()
-                headers[fields[0]] = " ".join(fields[1:])
-            else:
-                inheader = False
-        else:
-            logmsg = line
-            break
-    (author, ts) = headers["author"].split(">")
-    author = author.split("<")[-1]
-    author = author.replace('@debian.org','')
+    metainfo = do("git log -1 '--pretty=format:%an <%ae>%n%at%n%s' " + merged)
+    (author, ts, logmsg) = metainfo.split("\n")
+
+    # This discards the part of the authors addrsss after @.
+    # Might be be nice to ship the full email address, if not
+    # for spammers' address harvesters - getting this wrong
+    # would make the freenode #commits channel into harvester heaven.
+    author = author.replace("<", "").split("@")[0].split()[-1]
 
     # This ignores the timezone.  Not clear what to do with it...
     ts = ts.strip().split()[0]
@@ -168,38 +170,72 @@ Subject: DeliverXML
     return message
 
 if __name__ == "__main__":
-    # We''ll need the git version number.
-    gitver = do("git --version").split()[0]
+    import getopt
+
+    # Get all config variables
+    revformat = do("git config --get ciabot.revformat")
+    project = do("git config --get ciabot.project")
+    repo = do("git config --get ciabot.repo")
+    xmlrpc = do("git config --get xmlrpc")
+    xmlrpc = xmlrpc and xmlrpc != "false"
+
+    host = socket.getfqdn()
+    fromaddr = "CIABOT-NOREPLY@" + host
+
+    try:
+        (options, arguments) = getopt.getopt(sys.argv[1:], "np:V")
+    except getopt.GetoptError, msg:
+        print "ciabot.py: " + str(msg)
+        raise SystemExit, 1
+
+    notify = True
+    for (switch, val) in options:
+        if switch == '-p':
+            project = val
+        elif switch == '-n':
+            notify = False
+        elif switch == '-V':
+            print "ciabot.py: version", version
+            sys.exit(0)
+
+    # Cough and die if user has not specified a project
+    if not project:
+        sys.stderr.write("ciabot.py: no project specified, bailing out.\n")
+        sys.exit(1)
+
+    if not repo:
+        repo = project.lower()
 
     urlprefix = urlprefix % globals()
 
-    # Call this script with -n to dump the notification mail to stdout
-    mailit = True
-    if len(sys.argv) > 1 and sys.argv[1] == '-n':
-        mailit = False
-        sys.argv.pop(1)
-
     # The script wants a reference to head followed by the list of
     # commit ID to report about.
-    if len(sys.argv) == 1:
+    if len(arguments) == 0:
         refname = do("git symbolic-ref HEAD 2>/dev/null")
         merges = [do("git rev-parse HEAD")]
     else:
-        refname = sys.argv[1]
-        merges = sys.argv[2:]
+        refname = arguments[0]
+        merges = arguments[1:]
 
-    if mailit:
-        import smtplib
-        server = smtplib.SMTP('localhost')
+    if notify:
+        if xmlrpc:
+            import xmlrpclib
+            server = xmlrpclib.Server('http://cia.navi.cx/RPC2');
+        else:
+            import smtplib
+            server = smtplib.SMTP('localhost')
 
     for merged in merges:
         message = report(refname, merged)
-        if mailit:
-            server.sendmail(fromaddr, [toaddr], message)
-        else:
+        if not notify:
             print message
+        elif xmlrpc:
+            server.hub.deliver(message)
+        else:
+            server.sendmail(fromaddr, [toaddr], message)
 
-    if mailit:
-        server.quit()
+    if notify:
+        if not xmlrpc:
+            server.quit()
 
 #End
