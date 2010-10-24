@@ -170,7 +170,7 @@ Subject: DeliverXML
     return message
 
 if __name__ == "__main__":
-    import getopt
+    import getopt, getpass
 
     # Get all config variables
     revformat = do("git config --get hooks.revformat")
@@ -180,7 +180,7 @@ if __name__ == "__main__":
     xmlrpc = xmlrpc and xmlrpc != "false"
 
     host = socket.getfqdn()
-    fromaddr = "CIABOT-NOREPLY@" + host
+    fromaddr = "%s@%s" %(getpass.getuser(), host)
 
     try:
         (options, arguments) = getopt.getopt(sys.argv[1:], "np:V")
