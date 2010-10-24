@@ -173,9 +173,9 @@ if __name__ == "__main__":
     import getopt
 
     # Get all config variables
-    revformat = do("git config --get ciabot.revformat")
-    project = do("git config --get ciabot.project")
-    repo = do("git config --get ciabot.repo")
+    revformat = do("git config --get hooks.revformat")
+    project = do("git config --get hooks.cia-project")
+    repo = do("git config --get hooks.repo")
     xmlrpc = do("git config --get xmlrpc")
     xmlrpc = xmlrpc and xmlrpc != "false"
 
