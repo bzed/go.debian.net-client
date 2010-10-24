@@ -117,7 +117,7 @@ def report(refname, merged):
 
     # Try to tinyfy a reference to a web view for this commit.
     try:
-        postdata = serialize({"method": "add_url", 'params': ["%s%s" %(urlprefix, merged) ], 'id':'ciab
+        postdata = serialize({"method": "add_url", 'params': ["%s%s" %(urlprefix, merged) ], 'id':'ciabot.py'})
         respdata = urllib.urlopen("http://deb.li/rpc/json", postdata).read()
         resp = deserialize(respdata)
         if resp['error'] != None:
