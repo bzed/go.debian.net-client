@@ -182,7 +182,9 @@ if __name__ == "__main__":
     xmlrpc = do("git config --get hooks.cia-xmlrpc")
     xmlrpc = xmlrpc and xmlrpc != "false"
 
-    host = socket.getfqdn()
+    host = do("git config --get hooks.hostname")
+    if not host:
+        host = socket.getfqdn()
     fromaddr = "%s@%s" %(getpass.getuser(), host)
 
     try:
