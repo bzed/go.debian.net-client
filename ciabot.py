@@ -48,7 +48,7 @@
 # notifications shipped from a commit hook will arrive in order.)
 #
 
-import os, sys, commands, socket, urllib
+import os, sys, commands, socket, urllib, getpass
 
 # Changeset URL prefix for your repo: when the commit ID is appended
 # to this, it should point at a CGI that will display the commit
@@ -148,7 +148,10 @@ def report(refname, merged):
     # Might be be nice to ship the full email address, if not
     # for spammers' address harvesters - getting this wrong
     # would make the freenode #commits channel into harvester heaven.
-    author = author.replace("<", "").split("@")[0].split()[-1]
+    if getpass.getuser().startswith('git'):
+        author = author.replace("<", "").split("@")[0].split()[-1]
+    else:
+        author = getpass.getuser()
 
     # This ignores the timezone.  Not clear what to do with it...
     ts = ts.strip().split()[0]
@@ -170,7 +173,7 @@ Subject: DeliverXML
     return message
 
 if __name__ == "__main__":
-    import getopt, getpass
+    import getopt
 
     # Get all config variables
     revformat = do("git config --get hooks.revformat")
