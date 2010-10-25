@@ -28,10 +28,10 @@
 # /path/to/ciabot.py ${refname} $(git rev-list ${oldhead}..${newhead} | tac)
 #
 # Configuration variables affecting this script:
-# ciabot.project = name of the project (required)
-# ciabot.repo = name of the project repo for gitweb/cgit purposes
-# ciabot.xmlrpc  = if true, ship notifications via XML-RPC 
-# ciabot.revformat = format in which the revision is shown
+# hooks.cia-project = name of the project (required)
+# hooks.repo = name of the project repo for gitweb/cgit purposes
+# hooks.cia-xmlrpc  = if true, ship notifications via XML-RPC 
+# hooks.revformat = format in which the revision is shown
 #
 # The ciabot.repo defaults to ciabot.project lowercased. 
 #
@@ -179,7 +179,7 @@ if __name__ == "__main__":
     revformat = do("git config --get hooks.revformat")
     project = do("git config --get hooks.cia-project")
     repo = do("git config --get hooks.repo")
-    xmlrpc = do("git config --get xmlrpc")
+    xmlrpc = do("git config --get hooks.cia-xmlrpc")
     xmlrpc = xmlrpc and xmlrpc != "false"
 
     host = socket.getfqdn()
