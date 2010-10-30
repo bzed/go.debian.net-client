@@ -29,7 +29,7 @@ except ImportError:
     try:
         from json import dumps as serialize, loads as deserialize
     except:
-        from simplejson import loads as serialize, dumps as deserialize
+        from simplejson import dumps as serialize, loads as deserialize
 
 class JSONRPCException(Exception):
     def __init__(self, rpcError):
