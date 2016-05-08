@@ -1,3 +1,6 @@
+[![Code Issues](https://www.quantifiedcode.com/api/v1/project/be18678e9d5b4c1f8325e0b4dcc262b6/badge.svg)](https://www.quantifiedcode.com/app/project/be18678e9d5b4c1f8325e0b4dcc262b6)
+
+
 Example json-rpc client for deb.li/go.debian.net
 ------------------------------------------------
 
