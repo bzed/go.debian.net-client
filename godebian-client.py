@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 __author__ = "Bernd Zeimetz"
 __contact__ = "bzed@debian.org"
@@ -28,21 +28,26 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-
+import json
 import os
 import sys
+import requests
 
-from proxy import ServiceProxy, JSONRPCException
 
-sp = ServiceProxy("http://deb.li/rpc/json")
+rpc_url = "https://deb.li/rpc/json"
+method = os.path.basename(sys.argv[0])
+if method == 'godebian-client.py':
+    method = 'add_url'
+params = sys.argv[1:]
 
-command = os.path.basename(sys.argv[0])
-if command == 'godebian-client.py':
-    command = 'add_url'
-args = sys.argv[1:]
+postdata = {'params': params, 'method': method, 'id': 'jsonrpc'}
+
+r = requests.post(rpc_url, data = json.dumps(postdata))
+
 
 try:
-    result = eval ("sp.%s(*args)" %(command,))
-except JSONRPCException, e:
+    result = r.json()['result']
+except Exception as e:
     result = str(e)
-print result
+print(result)
+
